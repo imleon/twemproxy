@@ -581,8 +581,8 @@ server_pool_update(struct server_pool *pool)
 
     status = server_pool_run(pool);
     if (status != NC_OK) {
-        log_error("updating pool %"PRIu32" with dist %d failed: %s", pool->idx,
-                  pool->dist_type, strerror(errno));
+        log_error("updating pool %"PRIu32" with dist modula failed: %s", pool->idx,
+                  strerror(errno));
         return status;
     }
 
@@ -617,31 +617,15 @@ server_pool_server(struct server_pool *pool, uint8_t *key, uint32_t keylen)
     ASSERT(array_n(&pool->server) != 0);
     ASSERT(key != NULL && keylen != 0);
 
-    switch (pool->dist_type) {
-    case DIST_KETAMA:
-        hash = server_pool_hash(pool, key, keylen);
-        idx = ketama_dispatch(pool->continuum, pool->ncontinuum, hash);
-        break;
+    hash = server_pool_hash(pool, key, keylen);
+    idx = modula_dispatch(pool->continuum, pool->ncontinuum, hash);
 
-    case DIST_MODULA:
-        hash = server_pool_hash(pool, key, keylen);
-        idx = modula_dispatch(pool->continuum, pool->ncontinuum, hash);
-        break;
-
-    case DIST_RANDOM:
-        idx = random_dispatch(pool->continuum, pool->ncontinuum, 0);
-        break;
-
-    default:
-        NOT_REACHED();
-        return NULL;
-    }
     ASSERT(idx < array_n(&pool->server));
 
     server = array_get(&pool->server, idx);
 
-    log_debug(LOG_VERB, "key '%.*s' on dist %d maps to server '%.*s'", keylen,
-              key, pool->dist_type, server->pname.len, server->pname.data);
+    log_debug(LOG_VERB, "key '%.*s' on dist modula maps to server '%.*s'", keylen,
+              key, server->pname.len, server->pname.data);
 
     return server;
 }
@@ -747,22 +731,7 @@ server_pool_run(struct server_pool *pool)
 {
     ASSERT(array_n(&pool->server) != 0);
 
-    switch (pool->dist_type) {
-    case DIST_KETAMA:
-        return ketama_update(pool);
-
-    case DIST_MODULA:
-        return modula_update(pool);
-
-    case DIST_RANDOM:
-        return random_update(pool);
-
-    default:
-        NOT_REACHED();
-        return NC_ERROR;
-    }
-
-    return NC_OK;
+    return modula_update(pool);
 }
 
 static rstatus_t
