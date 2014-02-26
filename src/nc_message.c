@@ -230,9 +230,6 @@ done:
     msg->key_start = NULL;
     msg->key_end = NULL;
 
-    msg->vlen = 0;
-    msg->end = NULL;
-
     msg->frag_owner = NULL;
     msg->nfrag = 0;
     msg->frag_id = 0;
@@ -255,13 +252,12 @@ done:
     msg->first_fragment = 0;
     msg->last_fragment = 0;
     msg->swallow = 0;
-    msg->redis = 0;
 
     return msg;
 }
 
 struct msg *
-msg_get(struct conn *conn, bool request, bool redis)
+msg_get(struct conn *conn, bool request)
 {
     struct msg *msg;
 
@@ -272,29 +268,16 @@ msg_get(struct conn *conn, bool request, bool redis)
 
     msg->owner = conn;
     msg->request = request ? 1 : 0;
-    msg->redis = redis ? 1 : 0;
 
-    if (redis) {
-        if (request) {
-            msg->parser = redis_parse_req;
-        } else {
-            msg->parser = redis_parse_rsp;
-        }
-        msg->pre_splitcopy = redis_pre_splitcopy;
-        msg->post_splitcopy = redis_post_splitcopy;
-        msg->pre_coalesce = redis_pre_coalesce;
-        msg->post_coalesce = redis_post_coalesce;
+    if (request) {
+        msg->parser = redis_parse_req;
     } else {
-        if (request) {
-            msg->parser = memcache_parse_req;
-        } else {
-            msg->parser = memcache_parse_rsp;
-        }
-        msg->pre_splitcopy = memcache_pre_splitcopy;
-        msg->post_splitcopy = memcache_post_splitcopy;
-        msg->pre_coalesce = memcache_pre_coalesce;
-        msg->post_coalesce = memcache_post_coalesce;
+        msg->parser = redis_parse_rsp;
     }
+    msg->pre_splitcopy = redis_pre_splitcopy;
+    msg->post_splitcopy = redis_post_splitcopy;
+    msg->pre_coalesce = redis_pre_coalesce;
+    msg->post_coalesce = redis_post_coalesce;
 
     log_debug(LOG_VVERB, "get msg %p id %"PRIu64" request %d owner sd %d",
               msg, msg->id, msg->request, conn->sd);
@@ -303,13 +286,13 @@ msg_get(struct conn *conn, bool request, bool redis)
 }
 
 struct msg *
-msg_get_error(bool redis, err_t err)
+msg_get_error(err_t err)
 {
     struct msg *msg;
     struct mbuf *mbuf;
     int n;
     char *errstr = err ? strerror(err) : "unknown";
-    char *protstr = redis ? "-ERR" : "SERVER_ERROR";
+    char *protstr = "-ERR";
 
     msg = _msg_get();
     if (msg == NULL) {
@@ -317,7 +300,7 @@ msg_get_error(bool redis, err_t err)
     }
 
     msg->state = 0;
-    msg->type = MSG_RSP_MC_SERVER_ERROR;
+    msg->type = MSG_RSP_REDIS_ERROR;
 
     mbuf = mbuf_get();
     if (mbuf == NULL) {
@@ -436,7 +419,7 @@ msg_parsed(struct context *ctx, struct conn *conn, struct msg *msg)
         return NC_ENOMEM;
     }
 
-    nmsg = msg_get(msg->owner, msg->request, conn->redis);
+    nmsg = msg_get(msg->owner, msg->request);
     if (nmsg == NULL) {
         mbuf_put(nbuf);
         return NC_ENOMEM;
@@ -474,7 +457,7 @@ msg_fragment(struct context *ctx, struct conn *conn, struct msg *msg)
         return status;
     }
 
-    nmsg = msg_get(msg->owner, msg->request, msg->redis);
+    nmsg = msg_get(msg->owner, msg->request);
     if (nmsg == NULL) {
         mbuf_put(nbuf);
         return NC_ENOMEM;

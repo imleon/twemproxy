@@ -1,12 +1,12 @@
 .TH NUTCRACKER 8 "June 13, 2013"
 .SH NAME
-nutcracker \- Fast, light-weight proxy for memcached and Redis
+nutcracker \- Fast, light-weight proxy for Redis
 .SH SYNOPSIS
 .B nutcracker
 .RI [ options ]
 .SH DESCRIPTION
 \fBnutcracker\fP, also known as \fBtwemproxy\fP (pronounced "two-em-proxy"), is
-a fast and lightweight proxy for the memcached and Redis protocols.
+a fast and lightweight proxy for the Redis protocols.
 .PP
 It was primarily built to reduce the connection count on backend caching
 servers, but it has a number of features, such as:
@@ -69,7 +69,6 @@ Run as a daemon.
 .BR \-p ", " \-\-pid-file=\fIfilename\fP
 Set pid file to \fIfilename\fP.
 .SH SEE ALSO
-.BR memcached (8),
 .BR redis-server (1)
 .br
 .SH AUTHOR

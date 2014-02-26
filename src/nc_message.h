@@ -34,29 +34,6 @@ typedef enum msg_parse_result {
 
 typedef enum msg_type {
     MSG_UNKNOWN,
-    MSG_REQ_MC_GET,                       /* memcache retrieval requests */
-    MSG_REQ_MC_GETS,
-    MSG_REQ_MC_DELETE,                    /* memcache delete request */
-    MSG_REQ_MC_CAS,                       /* memcache cas request and storage request */
-    MSG_REQ_MC_SET,                       /* memcache storage request */
-    MSG_REQ_MC_ADD,
-    MSG_REQ_MC_REPLACE,
-    MSG_REQ_MC_APPEND,
-    MSG_REQ_MC_PREPEND,
-    MSG_REQ_MC_INCR,                      /* memcache arithmetic request */
-    MSG_REQ_MC_DECR,
-    MSG_REQ_MC_QUIT,                      /* memcache quit request */
-    MSG_RSP_MC_NUM,                       /* memcache arithmetic response */
-    MSG_RSP_MC_STORED,                    /* memcache cas and storage response */
-    MSG_RSP_MC_NOT_STORED,
-    MSG_RSP_MC_EXISTS,
-    MSG_RSP_MC_NOT_FOUND,
-    MSG_RSP_MC_END,
-    MSG_RSP_MC_VALUE,
-    MSG_RSP_MC_DELETED,                   /* memcache delete response */
-    MSG_RSP_MC_ERROR,                     /* memcache error responses */
-    MSG_RSP_MC_CLIENT_ERROR,
-    MSG_RSP_MC_SERVER_ERROR,
     MSG_REQ_REDIS_DEL,                    /* redis commands - keys */
     MSG_REQ_REDIS_EXISTS,
     MSG_REQ_REDIS_EXPIRE,
@@ -186,9 +163,6 @@ struct msg {
     uint8_t              *key_start;      /* key start */
     uint8_t              *key_end;        /* key end */
 
-    uint32_t             vlen;            /* value length (memcache) */
-    uint8_t              *end;            /* end marker (memcache) */
-
     uint8_t              *narg_start;     /* narg start (redis) */
     uint8_t              *narg_end;       /* narg end (redis) */
     uint32_t             narg;            /* # arguments (redis) */
@@ -211,7 +185,6 @@ struct msg {
     unsigned             first_fragment:1;/* first fragment? */
     unsigned             last_fragment:1; /* last fragment? */
     unsigned             swallow:1;       /* swallow response? */
-    unsigned             redis:1;         /* redis? */
 };
 
 TAILQ_HEAD(msg_tqh, msg);
@@ -222,9 +195,9 @@ void msg_tmo_delete(struct msg *msg);
 
 void msg_init(void);
 void msg_deinit(void);
-struct msg *msg_get(struct conn *conn, bool request, bool redis);
+struct msg *msg_get(struct conn *conn, bool request);
 void msg_put(struct msg *msg);
-struct msg *msg_get_error(bool redis, err_t err);
+struct msg *msg_get_error(err_t err);
 void msg_dump(struct msg *msg);
 bool msg_empty(struct msg *msg);
 rstatus_t msg_recv(struct context *ctx, struct conn *conn);

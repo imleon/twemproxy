@@ -138,13 +138,6 @@
     (str15icmp(m, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14) &&       \
      (m[15] == c15 || m[15] == (c15 ^ 0x20)))
 
-void memcache_parse_req(struct msg *r);
-void memcache_parse_rsp(struct msg *r);
-void memcache_pre_splitcopy(struct mbuf *mbuf, void *arg);
-rstatus_t memcache_post_splitcopy(struct msg *r);
-void memcache_pre_coalesce(struct msg *r);
-void memcache_post_coalesce(struct msg *r);
-
 void redis_parse_req(struct msg *r);
 void redis_parse_rsp(struct msg *r);
 void redis_pre_splitcopy(struct mbuf *mbuf, void *arg);

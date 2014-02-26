@@ -152,13 +152,12 @@ _conn_get(void)
     conn->connected = 0;
     conn->eof = 0;
     conn->done = 0;
-    conn->redis = 0;
 
     return conn;
 }
 
 struct conn *
-conn_get(void *owner, bool client, bool redis)
+conn_get(void *owner, bool client)
 {
     struct conn *conn;
 
@@ -166,9 +165,6 @@ conn_get(void *owner, bool client, bool redis)
     if (conn == NULL) {
         return NULL;
     }
-
-    /* connection either handles redis or memcache messages */
-    conn->redis = redis ? 1 : 0;
 
     conn->client = client ? 1 : 0;
 
@@ -237,8 +233,6 @@ conn_get_proxy(void *owner)
     if (conn == NULL) {
         return NULL;
     }
-
-    conn->redis = pool->redis;
 
     conn->proxy = 1;
 
